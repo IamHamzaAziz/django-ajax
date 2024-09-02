@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Document</title>
+</head>
+<body>
+    <h1>Add Item</h1>
+
+    <p>If I fill this form, data is displayed here and also saved in db</p>
+
+    <form id="addItemForm">
+        {% csrf_token %}
+        <input type="text" id="itemName" placeholder="Enter Item Name">
+        <br><br>
+        <button type="submit">Add Item</button>
+    </form>
+
+    <ul id="itemList">
+    </ul>
+
+    <p>If i add any item in admin panel it is automatically shown here after 2 seconds without reloading page</p>
+
+    <ul id="getItems">
+    </ul>
+
+    <script>
+        $(document).ready(function() {
+            // To save item to database and show it in list without reloading page
+            $('#addItemForm').submit(function (e) {
+                e.preventDefault()
+
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "add_item" %}',
+                    data: {
+                        'name': $('#itemName').val(),
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#itemList').append('<li>' + data.name + '</li>')
+                        $('#itemName').val('')
+                    },
+                    error: function(data) {
+                        console.log(data)
+                    }
+                })
+            })
+
+
+            // To show items from database without reloading the page
+            function fetchItems() {
+                $.ajax({
+                    type: 'GET',
+                    url: '{% url "get_items" %}',
+                    dataType: 'json',
+                    success: function(data) {
+                        $('#getItems').empty()
+                        data.items.forEach(function (item) {
+                            $('#getItems').append('<li>' + item.name + '</li>')
+                        })
+                    },
+                    error: function(data) {
+                        console.log(data)
+                    }
+                })
+            }
+
+            setInterval(fetchItems, 2000)
+        })
+    </script>
+</body>
+</html>
